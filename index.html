@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photon Pong</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1 id="gameTitle">PHOTON PONG</h1>
+
+  <p id="instructions">Use as setas ↑ e ↓ para mover a raquete</p>
+
+  <div id="gameContainer">
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+    <div id="overlay">
+      <button id="startButton">Iniciar Jogo</button>
+      <div id="countdownDisplay"></div>
+
+      <div id="endMessage" style="display:none;">
+        <div id="endText"></div>
+        <button id="restartButton">Jogar novamente</button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="effectMessage"></div>
+
+  <div id="scoreboard">
+    <span id="playerScore">0</span> — <span id="cpuScore">0</span>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
