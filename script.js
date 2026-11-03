@@ -266,7 +266,7 @@ function moverBola() {
   // ponto
   if (bola.x + bola.raio < 0) {
     cpuScore += multiplicadorProximoPonto;
-    removerEfeitoPonto();
+    resetarEfeitos();
     document.getElementById("cpuScore").textContent = cpuScore;
     if (checkMatchEnd()) return;
     iniciarContagemRound();
@@ -274,7 +274,7 @@ function moverBola() {
 
   if (bola.x - bola.raio > largura) {
     playerScore += multiplicadorProximoPonto;
-    removerEfeitoPonto();
+    resetarEfeitos();
     document.getElementById("playerScore").textContent = playerScore;
     if (checkMatchEnd()) return;
     iniciarContagemRound();
@@ -408,11 +408,21 @@ function ativarEfeito(tipo) {
     efeitos.controlesInvertidos = agora + 7000;
 }
 
-function removerEfeitoPonto() {
+
+function resetarEfeitos() {
+  jogador.altura = alturasOriginais.jogador;
+  cpu.altura = alturasOriginais.cpu;
+
+  Object.keys(efeitos).forEach(efeito => {
+    efeitos[efeito] = 0;
+  });
+
+  raqueteCrescida = null;
+  raqueteEncolhida = null;
   multiplicadorProximoPonto = 1;
   pontoDuploAte = 0;
-  if (effectMessage.textContent.startsWith("PONTO"))
-    effectMessage.textContent = "";
+  effectMessage.textContent = "";
+  ultimaRaquete = null;
 }
 
 
@@ -456,6 +466,7 @@ function atualizarEfeitos() {
 //MATCH
 function startMatch() {
   gameRunning = true;
+  resetarEfeitos();
   resetarBola(true);
   iniciarContagemRound();
 }
