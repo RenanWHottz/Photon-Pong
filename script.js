@@ -50,6 +50,7 @@ const cpu = {
 
 let playerScore = 0;
 let cpuScore = 0;
+const PONTOS_PARA_VENCER = 7;
 
 let ultimaRaquete = null;
 
@@ -109,25 +110,33 @@ restartButton.addEventListener("click", () => {
   startMatch();
 });
 
+let ultimoFrame = 0;
 
-function atualizar() {
-  moverJogador();
-  moverCPU();
-  if (roundActive) moverBola();
+function atualizar(timestamp) {
+  const deltaTime = ultimoFrame
+    ? Math.min((timestamp - ultimoFrame) / (1000 / 60), 2)
+    : 1;
+
+  ultimoFrame = timestamp;
+  moverJogador(deltaTime);
+  moverCPU(deltaTime);
+  if (roundActive) moverBola(deltaTime);
   controlarCaixaEspecial();
   atualizarEfeitos();
   desenhar();
   requestAnimationFrame(atualizar);
 }
 
-function moverJogador() {
+
+
+function moverJogador(deltaTime) {
   let direcao = 0;
   if (teclaCima) direcao = -1;
   if (teclaBaixo) direcao = 1;
   if (efeitos.controlesInvertidos > Date.now()) direcao *= -1;
 
   if (direcao !== 0) {
-    jogador.y += direcao * jogador.vel;
+    jogador.y += direcao * jogador.vel * deltaTime;
     if (jogador.y < 0) jogador.y = 0;
     if (jogador.y + jogador.altura > altura) jogador.y = altura - jogador.altura;
   }
@@ -136,7 +145,7 @@ function moverJogador() {
 
 let proximoUpdateCPU = 0;
 let alvoCPU = altura / 2;
-function moverCPU() {
+function moverCPU(deltaTime) {
   if (efeitos.miraPrecisa > Date.now()) return;
 
   let velocidadeCPU = efeitos.lentidaoCPU > Date.now()
@@ -180,9 +189,9 @@ function moverCPU() {
   const centroCPU = cpu.y + cpu.altura / 2;
 
   if (centroCPU < alvoCPU - 10) { //10 de tolerância
-    cpu.y += velocidadeCPU;
+    cpu.y += velocidadeCPU * deltaTime;
   } else if (centroCPU > alvoCPU + 10) {
-    cpu.y -= velocidadeCPU;
+    cpu.y -= velocidadeCPU * deltaTime;
   }
 
   if (cpu.y < 0) cpu.y = 0;//lIMITE DO CANVAS
@@ -190,16 +199,16 @@ function moverCPU() {
 }
 
 
-function moverBola() {
+function moverBola(deltaTime) {
   // magnetismo
   if (efeitos.magnetismo > Date.now()) {
     const alvoY = jogador.y + jogador.altura / 2;
-    bola.dirY += (alvoY - bola.y) * 0.0009;
+    bola.dirY += (alvoY - bola.y) * 0.0009 * deltaTime;
     bola.dirY = Math.max(-3, Math.min(3, bola.dirY));
   }
 
-  bola.x += bola.dirX * bola.speed;
-  bola.y += bola.dirY * bola.speed;
+  bola.x += bola.dirX * bola.speed * deltaTime;
+  bola.y += bola.dirY * bola.speed * deltaTime;
 
   //paredes
   if (bola.y - bola.raio < 0 || bola.y + bola.raio > altura)
@@ -282,11 +291,11 @@ function moverBola() {
 }
 
 function checkMatchEnd() {
-  if (playerScore >= 11 || cpuScore >= 11) {
+  if (playerScore >= PONTOS_PARA_VENCER || cpuScore >= PONTOS_PARA_VENCER) {
     roundActive = false;
     gameRunning = false;
     endText.textContent =
-      playerScore >= 11 ? "🏆 Você venceu!" : "🤖 A CPU venceu!";
+      playerScore >= PONTOS_PARA_VENCER ? "🏆 Você venceu!" : "🤖 A CPU venceu!";
     endMessage.style.display = "block";
     return true;
   }
@@ -349,6 +358,13 @@ function colisaoComCaixa() {
 
 function ativarEfeito(tipo) {
   const agora = Date.now();
+  const raqueteAfetada = ultimaRaquete;
+
+  if (["crescerRaquete", "encolherRaquete"].includes(tipo) && !raqueteAfetada) {
+    return;
+  }
+
+  resetarEfeitos();
 
   let nome = {
     pontoDuplo: "PONTO DUPLO!",
@@ -368,16 +384,11 @@ function ativarEfeito(tipo) {
     return;
   }
 
-  if (["crescerRaquete", "encolherRaquete"].includes(tipo)) {
-    if (!ultimaRaquete) return;
-  }
-
-
   if (tipo === "crescerRaquete") {
     efeitos.crescerRaquete = agora + 7000;
-    raqueteCrescida = ultimaRaquete;
+    raqueteCrescida = raqueteAfetada;
 
-    if (ultimaRaquete === "jogador") {
+    if (raqueteAfetada === "jogador") {
       jogador.altura = 120;
     } else {
       cpu.altura = 120;
@@ -386,9 +397,9 @@ function ativarEfeito(tipo) {
 
   if (tipo === "encolherRaquete") {
     efeitos.encolherRaquete = agora + 7000;
-    raqueteEncolhida = ultimaRaquete;
+    raqueteEncolhida = raqueteAfetada;
 
-    if (ultimaRaquete === "jogador") {
+    if (raqueteAfetada === "jogador") {
       jogador.altura = 50;
     } else {
       cpu.altura = 50;
@@ -567,7 +578,7 @@ function desenhar() {
   }
 }
 
-atualizar();
+requestAnimationFrame(atualizar);
 
 startButton.style.display = "block";
 endMessage.style.display = "none";
